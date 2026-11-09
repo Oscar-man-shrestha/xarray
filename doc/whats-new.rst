@@ -211,6 +211,10 @@ Deprecations
 
 Bug Fixes
 ~~~~~~~~~
+- :py:meth:`DataArray.set_index` now validates the resulting coordinates and
+  raises a ``ValueError`` instead of attaching coordinates on dimensions absent
+  from the array (:issue:`9278`). Valid dimension renaming remains supported.
+  By `Oscar Man Shrestha <https://github.com/Oscar-man-shrestha>`_.
 - Reducing a groupby or resample object over a dimension that does not exist,
   e.g. ``da.groupby("time").mean("longitude")``, now raises
   ``ValueError: Dimensions ('longitude',) not found in data dimensions (...)``,

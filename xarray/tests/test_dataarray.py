@@ -2457,6 +2457,45 @@ class TestDataArray:
         with pytest.raises(ValueError, match=r".*variable\(s\) do not exist"):
             obj.set_index(x="level_4")
 
+    @pytest.mark.parametrize("append", [False, True])
+    def test_set_index_nonexistent_dimension(self, append: bool) -> None:
+        # GH9278: index coordinates cannot add dimensions to a DataArray.
+        array = DataArray(
+            [1, 2, 3],
+            dims="time",
+            coords={
+                "first": ("time", ["a", "b", "c"]),
+                "second": ("time", ["x", "y", "z"]),
+            },
+        )
+        original = array.copy(deep=True)
+
+        with pytest.raises(
+            CoordinateValidationError, match="not a subset of the DataArray dimensions"
+        ):
+            array.set_index(combined=["first", "second"], append=append)
+
+        assert_identical(array, original)
+
+    def test_set_index_rename_dimension(self) -> None:
+        array = DataArray(
+            [1, 2, 3],
+            dims="time",
+            coords={"time": [0, 1, 2], "label": ("time", ["a", "b", "c"])},
+        )
+        index = pd.MultiIndex.from_arrays(
+            [[0, 1, 2], ["a", "b", "c"]], names=["time", "label"]
+        )
+        expected = DataArray(
+            [1, 2, 3],
+            dims="combined",
+            coords=Coordinates.from_pandas_multiindex(index, "combined"),
+        )
+
+        result = array.set_index(combined=["time", "label"])
+
+        assert_identical(result, expected)
+
     def test_reset_index(self) -> None:
         indexes = [self.mindex.get_level_values(n) for n in self.mindex.names]  # type: ignore[arg-type,unused-ignore]  # pandas-stubs varies
         coords = {idx.name: ("x", idx) for idx in indexes}

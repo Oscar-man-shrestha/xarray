@@ -3048,7 +3048,9 @@ class DataArray(
           * y        (y) int64 24B 0 1 2
         """
         ds = self._to_temp_dataset().set_index(indexes, append=append, **indexes_kwargs)
-        return self._from_temp_dataset(ds)
+        result = self._from_temp_dataset(ds)
+        validate_dataarray_coords(result.shape, result.coords, result.dims)
+        return result
 
     def reset_index(
         self,
